@@ -84,6 +84,18 @@
     box-shadow:0 6px 14px rgba(43,108,176,.35);
   }
   .overlay .back:active { transform:scale(.96); }
+  /* ---------- mode switch ---------- */
+  .mode-switch { display:flex; background:rgba(255,255,255,.7); border:2px solid #fff;
+    border-radius:999px; overflow:hidden; box-shadow:0 3px 8px rgba(43,108,176,.18); }
+  .mode-switch button { border:none; background:transparent; cursor:pointer;
+    padding:8px 13px; font-size:13px; font-weight:800; font-family:inherit; color:#5b6b7a; }
+  .mode-switch button.on { background:#2b6cb0; color:#fff; }
+  /* ---------- pc mode ---------- */
+  .phone.pc { width:min(1100px, 100vw); height:min(700px, 100vh); height:min(700px, 100dvh);
+    border:none; border-radius:0; }
+  .phone.pc .grid { grid-template-columns:repeat(6, 1fr); grid-template-rows:repeat(2, 1fr); }
+  .phone.pc .channel .icon { font-size:52px; }
+  .phone.pc .channel .lbl { font-size:13px; }
 </style>
 </head>
 <body>
@@ -102,7 +114,10 @@
   <div class="bottombar">
     <button class="wii-btn" id="wiiBtn" title="Wii Menu">Wii</button>
     <div class="dots"><i class="on"></i><i></i><i></i></div>
-    <div class="hint">Tap a channel</div>
+    <div class="mode-switch" id="modeSwitch">
+      <button class="on" data-mode="phone">📱 Phone</button>
+      <button data-mode="pc">🖥️ PC</button>
+    </div>
   </div>
 
   <div class="overlay" id="overlay">
@@ -151,6 +166,19 @@
   document.getElementById("ovBack").addEventListener("click", closeChannel);
   document.getElementById("wiiBtn").addEventListener("click", closeChannel);
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") { closeChannel(); } });
+
+  /* ---------- pc / phone mode switch ---------- */
+  var phoneEl = document.getElementById("phone");
+  var modeBtns = document.querySelectorAll("#modeSwitch button");
+  function setMode(mode){
+    phoneEl.classList.toggle("pc", mode === "pc");
+    modeBtns.forEach(function(b){ b.classList.toggle("on", b.dataset.mode === mode); });
+    try { localStorage.setItem("wii-phone-mode", mode); } catch(e){}
+  }
+  modeBtns.forEach(function(b){
+    b.addEventListener("click", function(){ setMode(b.dataset.mode); });
+  });
+  try { setMode(localStorage.getItem("wii-phone-mode") === "pc" ? "pc" : "phone"); } catch(e){}
 
   function tick(){
     var d = new Date();
