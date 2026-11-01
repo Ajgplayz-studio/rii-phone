@@ -44,11 +44,14 @@
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
     font-family:inherit; color:#1c2b39; padding:6px 4px;
     transition:transform .08s ease, box-shadow .08s ease;
+    user-select:none; -webkit-user-select:none; -webkit-touch-callout:none;
   }
   .channel:hover { box-shadow:0 6px 14px rgba(43,108,176,.28); }
   .channel:active { transform:scale(.94); }
   .channel .icon { font-size:34px; line-height:1; }
-  .channel .lbl { font-size:11px; font-weight:700; text-align:center; line-height:1.2; }
+  .channel .lbl { font-size:11px; font-weight:700; text-align:center; line-height:1.2;
+    max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .channel .plus { font-size:26px; color:rgba(91,107,122,.45); font-weight:300; }
   .channel.empty { background:rgba(255,255,255,.35); border-style:dashed;
     border-color:rgba(91,107,122,.35); box-shadow:none; cursor:default; }
   /* ---------- bottom bar ---------- */
@@ -75,15 +78,25 @@
     background:linear-gradient(170deg,#eef7ff,#c2e2f8); padding:24px; text-align:center;
   }
   .overlay.open { display:flex; }
-  .overlay .big { font-size:72px; line-height:1; }
-  .overlay h2 { font-size:26px; font-weight:800; }
-  .overlay p { font-size:14px; color:#5b6b7a; line-height:1.5; max-width:260px; }
-  .overlay .back {
-    margin-top:8px; padding:12px 34px; border:none; border-radius:999px; cursor:pointer;
-    background:#2b6cb0; color:#fff; font-size:16px; font-weight:800; font-family:inherit;
-    box-shadow:0 6px 14px rgba(43,108,176,.35);
-  }
-  .overlay .back:active { transform:scale(.96); }
+  .overlay .ov-card { display:flex; flex-direction:column; align-items:center; gap:12px;
+    background:rgba(255,255,255,.78); border:2px solid #fff; border-radius:20px;
+    padding:26px 22px; width:min(320px, 92%); box-shadow:0 14px 34px rgba(43,108,176,.25); text-align:center; }
+  .overlay .ov-icon { font-size:52px; line-height:1; }
+  .overlay h2 { font-size:22px; font-weight:800; }
+  .overlay p { font-size:14px; color:#5b6b7a; line-height:1.5; }
+  .overlay p b { color:#1c2b39; }
+  .overlay .ov-site { font-size:12px; color:#5b6b7a; word-break:break-all; }
+  .overlay input { width:100%; padding:12px 14px; border-radius:12px; border:2px solid #bcd6ea;
+    font-size:15px; font-family:inherit; outline:none; background:#fff; color:#1c2b39; }
+  .overlay input:focus { border-color:#2b6cb0; }
+  .overlay .ov-error { font-size:13px; color:#c0392b; font-weight:700; min-height:18px; }
+  .overlay .ov-row { display:flex; gap:10px; margin-top:4px; }
+  .overlay .ov-btn { padding:12px 26px; border:none; border-radius:999px; cursor:pointer;
+    background:#2b6cb0; color:#fff; font-size:15px; font-weight:800; font-family:inherit;
+    box-shadow:0 6px 14px rgba(43,108,176,.35); }
+  .overlay .ov-btn:active { transform:scale(.96); }
+  .overlay .ov-btn.ghost { background:rgba(255,255,255,.85); color:#2b6cb0; box-shadow:none;
+    border:2px solid #bcd6ea; }
   /* ---------- mode switch ---------- */
   .mode-switch { display:flex; background:rgba(255,255,255,.7); border:2px solid #fff;
     border-radius:999px; overflow:hidden; box-shadow:0 3px 8px rgba(43,108,176,.18); }
@@ -120,52 +133,139 @@
     </div>
   </div>
 
-  <div class="overlay" id="overlay">
-    <div class="big" id="ovIcon"></div>
-    <h2 id="ovName"></h2>
-    <p>This channel isn't built yet.</p>
-    <button class="back" id="ovBack">Back</button>
-  </div>
+  <div class="overlay" id="overlay"></div>
 </div>
 
 <script>
-  var CHANNELS = [
-    { icon: "\u{1F4BF}", name: "Disc Channel" },
-    { icon: "\u{1F9CD}", name: "Mii Channel" },
-    { icon: "\u{1F4F7}", name: "Photo Channel" },
-    { icon: "\u{1F6D2}", name: "Wii Shop Channel" },
-    { icon: "\u{1F324}", name: "Forecast Channel" },
-    { icon: "\u{1F4F0}", name: "News Channel" },
-    { icon: "\u{1F310}", name: "Internet Channel" },
-    { icon: "\u{1F5F3}", name: "Everybody Votes" },
-    { icon: "\u2728", name: "Check Mii Out" }
-  ];
   var grid = document.getElementById("grid");
   var overlay = document.getElementById("overlay");
+  var SLOTS = 12;
+  var channels = loadChannels();
 
-  function openChannel(ch){
-    document.getElementById("ovIcon").textContent = ch.icon;
-    document.getElementById("ovName").textContent = ch.name;
-    overlay.classList.add("open");
+  function loadChannels(){
+    try {
+      var saved = JSON.parse(localStorage.getItem("wii-phone-channels") || "null");
+      if (Array.isArray(saved)) {
+        var list = saved.slice(0, SLOTS);
+        while (list.length < SLOTS) list.push(null);
+        return list;
+      }
+    } catch(e){}
+    var empty = [];
+    for (var i = 0; i < SLOTS; i++) empty.push(null);
+    return empty;
   }
-  function closeChannel(){ overlay.classList.remove("open"); }
-
-  CHANNELS.forEach(function(ch){
-    var b = document.createElement("button");
-    b.className = "channel";
-    b.innerHTML = '<span class="icon">' + ch.icon + '</span><span class="lbl">' + ch.name + '</span>';
-    b.addEventListener("click", function(){ openChannel(ch); });
-    grid.appendChild(b);
-  });
-  for (var i = CHANNELS.length; i < 12; i++){
-    var e = document.createElement("div");
-    e.className = "channel empty";
-    grid.appendChild(e);
+  function saveChannels(){
+    try { localStorage.setItem("wii-phone-channels", JSON.stringify(channels)); } catch(e){}
+  }
+  function normalizeSite(raw){
+    var s = (raw || "").trim();
+    if (!s) return null;
+    if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(s)) s = "https://" + s;
+    try {
+      var u = new URL(s);
+      if (!u.hostname || u.hostname.indexOf(".") === -1) return null;
+      return u.href;
+    } catch(e){ return null; }
+  }
+  function nameFromUrl(url){
+    try { return new URL(url).hostname.replace(/^www\./, ""); }
+    catch(e){ return url; }
+  }
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; });
   }
 
-  document.getElementById("ovBack").addEventListener("click", closeChannel);
-  document.getElementById("wiiBtn").addEventListener("click", closeChannel);
-  document.addEventListener("keydown", function(e){ if (e.key === "Escape") { closeChannel(); } });
+  function renderGrid(){
+    grid.innerHTML = "";
+    channels.forEach(function(ch, i){
+      var b = document.createElement("button");
+      if (ch) {
+        b.className = "channel";
+        b.innerHTML = '<span class="icon">\u{1F310}</span><span class="lbl">' + escapeHtml(ch.name) + '</span>';
+      } else {
+        b.className = "channel empty";
+        b.innerHTML = '<span class="plus">+</span>';
+      }
+      attachSlot(b, i);
+      grid.appendChild(b);
+    });
+  }
+
+  function attachSlot(el, i){
+    var timer = null, longPressed = false, sx = 0, sy = 0;
+    el.addEventListener("pointerdown", function(e){
+      longPressed = false; sx = e.clientX; sy = e.clientY;
+      timer = setTimeout(function(){ longPressed = true; onHold(i); }, 600);
+    });
+    function cancel(){
+      if (timer) { clearTimeout(timer); timer = null; }
+    }
+    el.addEventListener("pointerup", cancel);
+    el.addEventListener("pointercancel", cancel);
+    el.addEventListener("pointerleave", cancel);
+    el.addEventListener("pointermove", function(e){
+      if (timer && (Math.abs(e.clientX - sx) > 10 || Math.abs(e.clientY - sy) > 10)) cancel();
+    });
+    el.addEventListener("click", function(){
+      if (longPressed) { longPressed = false; return; }
+      var ch = channels[i];
+      if (ch) window.open(ch.url, "_blank", "noopener");
+    });
+    el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  }
+
+  function hideOverlay(){ overlay.classList.remove("open"); overlay.innerHTML = ""; }
+  function showOverlay(html){ overlay.innerHTML = html; overlay.classList.add("open"); }
+
+  function onHold(i){
+    var ch = channels[i];
+    if (ch) {
+      showOverlay(
+        '<div class="ov-card"><div class="ov-icon">\u{1F310}</div><h2>Replace this channel?</h2>' +
+        '<p><b>' + escapeHtml(ch.name) + '</b></p><p class="ov-site">' + escapeHtml(ch.url) + '</p>' +
+        '<div class="ov-row"><button class="ov-btn" id="ovYes">Yes, replace</button>' +
+        '<button class="ov-btn ghost" id="ovNo">No</button></div></div>');
+    } else {
+      showOverlay(
+        '<div class="ov-card"><div class="ov-icon">+</div><h2>Create a channel here?</h2>' +
+        '<p>Pick a site and it becomes a channel in this slot.</p>' +
+        '<div class="ov-row"><button class="ov-btn" id="ovYes">Yes</button>' +
+        '<button class="ov-btn ghost" id="ovNo">No</button></div></div>');
+    }
+    document.getElementById("ovNo").addEventListener("click", hideOverlay);
+    document.getElementById("ovYes").addEventListener("click", function(){ showForm(i); });
+  }
+
+  function showForm(i){
+    var ch = channels[i];
+    showOverlay(
+      '<form class="ov-card" id="ovForm"><div class="ov-icon">\u{1F310}</div><h2>' +
+      (ch ? "Replace channel" : "Create channel") + '</h2>' +
+      '<p>Type a site, like youtube.com</p>' +
+      '<input id="ovSite" type="text" inputmode="url" autocomplete="off" spellcheck="false" placeholder="example.com" value="' + (ch ? escapeHtml(ch.url) : "") + '">' +
+      '<div class="ov-error" id="ovError"></div>' +
+      '<div class="ov-row"><button class="ov-btn" type="submit">Make it</button>' +
+      '<button class="ov-btn ghost" type="button" id="ovCancel">Cancel</button></div></form>');
+    var input = document.getElementById("ovSite");
+    input.focus();
+    document.getElementById("ovCancel").addEventListener("click", hideOverlay);
+    document.getElementById("ovForm").addEventListener("submit", function(e){
+      e.preventDefault();
+      var url = normalizeSite(input.value);
+      if (!url) {
+        document.getElementById("ovError").textContent = "That doesn't look like a site. Try something like youtube.com";
+        return;
+      }
+      channels[i] = { url: url, name: nameFromUrl(url) };
+      saveChannels(); renderGrid(); hideOverlay();
+    });
+  }
+
+  renderGrid();
+
+  document.getElementById("wiiBtn").addEventListener("click", hideOverlay);
+  document.addEventListener("keydown", function(e){ if (e.key === "Escape") { hideOverlay(); } });
 
   /* ---------- pc / phone mode switch ---------- */
   var phoneEl = document.getElementById("phone");
