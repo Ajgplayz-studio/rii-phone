@@ -16,31 +16,28 @@
   /* ---------- phone frame ---------- */
   .phone {
     position:relative; width:min(400px, 100vw); height:min(800px, 100vh); height:min(800px, 100dvh);
-    background:linear-gradient(170deg,#eef7ff 0%,#d6ecfb 55%,#c2e2f8 100%);
+    background:
+      radial-gradient(340px 340px at 12% 6%, rgba(255,255,255,.9), transparent 70%),
+      radial-gradient(300px 300px at 88% 20%, rgba(255,255,255,.7), transparent 70%),
+      radial-gradient(420px 420px at 50% 112%, rgba(190,222,244,.55), transparent 70%),
+      linear-gradient(180deg,#fdfeff 0%,#e9f4fb 55%,#d5eaf7 100%);
     overflow:hidden; display:flex; flex-direction:column; color:#1c2b39;
   }
   @media (min-width:480px) and (min-height:860px){
     .phone { border-radius:44px; border:10px solid #10131c; box-shadow:0 30px 80px rgba(0,0,0,.6); }
   }
-  /* ---------- top bar ---------- */
-  .topbar {
-    flex:none; display:flex; align-items:center; justify-content:space-between;
-    padding:16px 18px 6px;
-  }
-  .wordmark { font-size:24px; font-weight:800; letter-spacing:1px; color:#2b6cb0; }
-  .wordmark span { color:#8a8f9e; font-weight:600; }
   .clock { text-align:right; line-height:1.2; }
   .clock .time { font-size:20px; font-weight:800; }
   .clock .date { font-size:12px; color:#5b6b7a; font-weight:600; }
   /* ---------- channel grid ---------- */
   .grid {
     flex:1; display:grid; grid-template-columns:repeat(4, 1fr); grid-template-rows:repeat(3, 1fr);
-    gap:10px; padding:12px 14px;
+    gap:10px; padding:18px 14px 12px;
   }
   .channel {
-    border:2px solid rgba(255,255,255,.9); border-radius:14px; cursor:pointer;
-    background:linear-gradient(180deg,#ffffff,#eaf4fc);
-    box-shadow:0 3px 8px rgba(43,108,176,.18);
+    border:1px solid #c8d8e6; border-radius:12px; cursor:pointer;
+    background:linear-gradient(180deg,#ffffff 0%,#f2f8fd 55%,#e3eef7 100%);
+    box-shadow:0 2px 6px rgba(70,110,150,.18), inset 0 1px 0 #ffffff;
     display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
     font-family:inherit; color:#1c2b39; padding:6px 4px;
     transition:transform .08s ease, box-shadow .08s ease;
@@ -56,14 +53,20 @@
     border-color:rgba(91,107,122,.35); box-shadow:none; cursor:default; }
   /* ---------- bottom bar ---------- */
   .bottombar {
-    flex:none; display:flex; align-items:center; justify-content:space-between;
-    padding:10px 18px 18px;
+    flex:none; display:flex; align-items:center; justify-content:space-between; gap:8px;
+    padding:10px 14px 14px; background:rgba(255,255,255,.55);
+    border-top:1px solid rgba(255,255,255,.9);
+  }
+  @media (max-width:420px){
+    .bottombar { padding:8px 10px 10px; }
+    .mode-switch button { padding:7px 9px; font-size:12px; }
+    .bottombar .clock .time { font-size:16px; }
   }
   .wii-btn {
     width:56px; height:56px; border-radius:50%; border:3px solid #fff; cursor:pointer;
-    background:linear-gradient(180deg,#fdfdfd,#dbe9f4); color:#2b6cb0;
+    background:linear-gradient(180deg,#ffffff,#dbe9f4); color:#5f7080;
     font-size:17px; font-weight:800; font-family:inherit;
-    box-shadow:0 4px 10px rgba(43,108,176,.3);
+    box-shadow:0 4px 10px rgba(70,110,150,.3), inset 0 1px 0 #fff;
     transition:transform .08s ease;
   }
   .wii-btn:active { transform:scale(.92); }
@@ -97,6 +100,11 @@
   .overlay .ov-btn:active { transform:scale(.96); }
   .overlay .ov-btn.ghost { background:rgba(255,255,255,.85); color:#2b6cb0; box-shadow:none;
     border:2px solid #bcd6ea; }
+  .overlay .ov-opt { width:100%; display:flex; justify-content:space-between; align-items:center;
+    padding:13px 16px; border-radius:12px; border:1px solid #c8d8e6; background:#fff;
+    font-size:15px; font-weight:700; color:#1c2b39; cursor:pointer; font-family:inherit; }
+  .overlay .ov-opt:hover { background:#f2f8fd; }
+  .overlay .ov-msg { min-height:18px; font-size:13px; color:#5b6b7a; font-weight:600; }
   /* ---------- mode switch ---------- */
   .mode-switch { display:flex; background:rgba(255,255,255,.7); border:2px solid #fff;
     border-radius:999px; overflow:hidden; box-shadow:0 3px 8px rgba(43,108,176,.18); }
@@ -114,24 +122,22 @@
 <body>
 
 <div class="phone" id="phone">
-  <div class="topbar">
-    <div class="wordmark">Wii<span>Phone</span></div>
+  <div class="grid" id="grid"></div>
+
+  <div class="bottombar">
+    <button class="wii-btn" id="wiiBtn" title="Settings">Wii</button>
+    <div class="dots"><i class="on"></i><i></i><i></i></div>
+    <div class="mode-switch" id="modeSwitch">
+      <button class="on" data-mode="phone">📱 Phone</button>
+      <button data-mode="pc">🖥️ PC</button>
+    </div>
     <div class="clock">
       <div class="time" id="clockTime">--:--</div>
       <div class="date" id="clockDate"></div>
     </div>
   </div>
 
-  <div class="grid" id="grid"></div>
-
-  <div class="bottombar">
-    <button class="wii-btn" id="wiiBtn" title="Wii Menu">Wii</button>
-    <div class="dots"><i class="on"></i><i></i><i></i></div>
-    <div class="mode-switch" id="modeSwitch">
-      <button class="on" data-mode="phone">📱 Phone</button>
-      <button data-mode="pc">🖥️ PC</button>
-    </div>
-  </div>
+  <input type="file" id="importFile" accept=".json,application/json" style="display:none">
 
   <div class="overlay" id="overlay"></div>
 </div>
@@ -215,8 +221,9 @@
     el.addEventListener("contextmenu", function(e){ e.preventDefault(); });
   }
 
-  function hideOverlay(){ overlay.classList.remove("open"); overlay.innerHTML = ""; }
-  function showOverlay(html){ overlay.innerHTML = html; overlay.classList.add("open"); }
+  var overlayView = null;
+  function hideOverlay(){ overlay.classList.remove("open"); overlay.innerHTML = ""; overlayView = null; }
+  function showOverlay(html, view){ overlay.innerHTML = html; overlay.classList.add("open"); overlayView = view || "channel"; }
 
   function onHold(i){
     var ch = channels[i];
@@ -264,7 +271,6 @@
 
   renderGrid();
 
-  document.getElementById("wiiBtn").addEventListener("click", hideOverlay);
   document.addEventListener("keydown", function(e){ if (e.key === "Escape") { hideOverlay(); } });
 
   /* ---------- pc / phone mode switch ---------- */
@@ -279,6 +285,65 @@
     b.addEventListener("click", function(){ setMode(b.dataset.mode); });
   });
   try { setMode(localStorage.getItem("wii-phone-mode") === "pc" ? "pc" : "phone"); } catch(e){}
+
+  /* ---------- wii button settings: export / import ---------- */
+  function settingsMsg(t){
+    var m = document.getElementById("ovMsg");
+    if (m) m.textContent = t;
+  }
+  function showSettings(){
+    showOverlay(
+      '<div class="ov-card"><h2>Wii Settings</h2>' +
+      '<button class="ov-opt" id="ovExport"><span>\u{1F4E4} Export Wii Data</span><span>\u203A</span></button>' +
+      '<button class="ov-opt" id="ovImport"><span>\u{1F4E5} Import Wii Data</span><span>\u203A</span></button>' +
+      '<div class="ov-msg" id="ovMsg"></div>' +
+      '<div class="ov-row"><button class="ov-btn" id="ovBack">Back</button></div></div>', "settings");
+    document.getElementById("ovBack").addEventListener("click", hideOverlay);
+    document.getElementById("ovExport").addEventListener("click", exportData);
+    document.getElementById("ovImport").addEventListener("click", function(){ document.getElementById("importFile").click(); });
+  }
+  function countMsg(n){
+    return n + (n === 1 ? " channel" : " channels");
+  }
+  function exportData(){
+    var data = { app: "wii-phone", version: 1, mode: phoneEl.classList.contains("pc") ? "pc" : "phone", channels: channels };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "wii-data.json";
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1000);
+    settingsMsg("Exported " + countMsg(channels.filter(Boolean).length) + ".");
+  }
+  function importData(file){
+    var reader = new FileReader();
+    reader.onload = function(){
+      try {
+        var data = JSON.parse(reader.result);
+        if (!data || !Array.isArray(data.channels)) throw new Error("bad data");
+        var list = [];
+        for (var i = 0; i < SLOTS; i++) {
+          var c = data.channels[i];
+          if (c && typeof c.url === "string" && normalizeSite(c.url)) {
+            var url = normalizeSite(c.url);
+            list.push({ url: url, name: (typeof c.name === "string" && c.name) ? c.name : nameFromUrl(url) });
+          } else list.push(null);
+        }
+        channels = list; saveChannels(); renderGrid();
+        if (data.mode === "pc" || data.mode === "phone") setMode(data.mode);
+        settingsMsg("Imported " + countMsg(list.filter(Boolean).length) + ".");
+      } catch(e){ settingsMsg("That file doesn't look like Wii data."); }
+    };
+    reader.readAsText(file);
+  }
+  document.getElementById("importFile").addEventListener("change", function(e){
+    var f = e.target.files[0];
+    if (f) importData(f);
+    e.target.value = "";
+  });
+  document.getElementById("wiiBtn").addEventListener("click", function(){
+    if (overlayView === "settings") hideOverlay(); else showSettings();
+  });
 
   function tick(){
     var d = new Date();
